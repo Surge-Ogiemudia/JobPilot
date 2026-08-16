@@ -61,3 +61,28 @@ export function stageColor(stage: string): string {
   };
   return colors[stage] ?? "bg-slate-500";
 }
+
+export function parseStartDate(dateStr?: string): number {
+  if (!dateStr) return 0;
+  const parsed = Date.parse(dateStr);
+  if (!isNaN(parsed)) return parsed;
+  const parts = dateStr.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    const year = parseInt(parts[parts.length - 1]);
+    const monthStr = parts[0].toLowerCase();
+    const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const monthIdx = months.findIndex((m) => monthStr.startsWith(m));
+    if (!isNaN(year) && monthIdx !== -1) {
+      return new Date(year, monthIdx, 1).getTime();
+    }
+    if (!isNaN(year)) {
+      return new Date(year, 0, 1).getTime();
+    }
+  }
+  return 0;
+}
+
+export function sortExperienceChronological<T extends { startDate?: string }>(experiences: T[]): T[] {
+  return [...experiences].sort((a, b) => parseStartDate(a.startDate) - parseStartDate(b.startDate));
+}
+

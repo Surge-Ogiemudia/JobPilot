@@ -5,6 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Save, Plus, Trash2, User, Briefcase, GraduationCap, Link as LinkIcon, Pencil, Check } from "lucide-react";
 import { toast } from "sonner";
 
+import { sortExperienceChronological } from "@/lib/utils";
+
 export default function ProfilePage() {
   const qc = useQueryClient();
   const { data: profile, isLoading } = useQuery({
@@ -17,14 +19,23 @@ export default function ProfilePage() {
   const [editingExpIndices, setEditingExpIndices] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
-    if (profile) setForm(profile);
+    if (profile) {
+      if (Array.isArray(profile.workExperience)) {
+        profile.workExperience = sortExperienceChronological(profile.workExperience);
+      }
+      setForm(profile);
+    }
   }, [profile]);
 
   async function save() {
+    const payload = { ...form };
+    if (Array.isArray(payload.workExperience)) {
+      payload.workExperience = sortExperienceChronological(payload.workExperience as Array<{ startDate?: string }>);
+    }
     await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     qc.invalidateQueries({ queryKey: ["profile"] });
     toast.success("Profile saved successfully");
