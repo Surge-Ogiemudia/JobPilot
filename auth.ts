@@ -12,6 +12,8 @@ const client = new MongoClient(process.env.MONGODB_URI!);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  trustHost: true,
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   adapter: MongoDBAdapter(client),
   session: { strategy: "jwt" },
   providers: [
