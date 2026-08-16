@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Plus, Trash2, User, Briefcase, GraduationCap, Link as LinkIcon } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Save, Plus, Trash2, User, Briefcase, GraduationCap, Link as LinkIcon, Pencil, Check } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
@@ -14,6 +14,7 @@ export default function ProfilePage() {
 
   const [tab, setTab] = useState<"summary" | "experience" | "education" | "links">("summary");
   const [form, setForm] = useState<Record<string, unknown>>({});
+  const [editingExpIndices, setEditingExpIndices] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     if (profile) setForm(profile);
@@ -26,7 +27,7 @@ export default function ProfilePage() {
       body: JSON.stringify(form),
     });
     qc.invalidateQueries({ queryKey: ["profile"] });
-    toast.success("Profile saved");
+    toast.success("Profile saved successfully");
   }
 
   function updateField(path: string, value: unknown) {
@@ -41,6 +42,10 @@ export default function ProfilePage() {
       obj[parts[parts.length - 1]] = value;
       return next;
     });
+  }
+
+  function toggleEditExp(index: number) {
+    setEditingExpIndices(prev => ({ ...prev, [index]: !prev[index] }));
   }
 
   if (isLoading) return <div style={{ color: "hsl(215 20% 55%)" }}>Loading...</div>;
@@ -93,39 +98,118 @@ export default function ProfilePage() {
         <div>
           {workExperience.map((exp: unknown, i: number) => {
             const e = exp as Record<string, unknown>;
+            const isEditing = editingExpIndices[i] ?? false;
+            const achievements = (e.achievements as string[]) ?? [];
+
             return (
-              <div key={i} className="glass-card" style={{ padding: "20px", marginBottom: "12px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "14px" }}>
-                  <strong style={{ fontSize: "0.9rem" }}>{(e.title as string) || "New Role"} @ {(e.company as string) || "Company"}</strong>
-                  <button onClick={() => { const arr = [...workExperience]; arr.splice(i, 1); updateField("workExperience", arr); }}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(0 72% 55%)" }}>
-                    <Trash2 size={15} />
-                  </button>
+              <div key={i} className="glass-card" style={{ padding: "20px", marginBottom: "16px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                  <div>
+                    <strong style={{ fontSize: "0.95rem" }}>{(e.title as string) || "New Role"}</strong>
+                    <span style={{ color: "hsl(263 80% 70%)", fontSize: "0.85rem", fontWeight: 600 }}> @ {(e.company as string) || "Company"}</span>
+                    <div style={{ fontSize: "0.75rem", color: "hsl(215 20% 50%)", marginTop: "2px" }}>
+                      {(e.startDate as string) || "Start Date"} – {(e.endDate as string) || "Present"}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <button
+                      onClick={() => toggleEditExp(i)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        padding: "6px 12px",
+                        borderRadius: "8px",
+                        background: isEditing ? "hsl(142 76% 36% / 0.2)" : "hsl(222 47% 12%)",
+                        border: `1px solid ${isEditing ? "hsl(142 76% 36% / 0.4)" : "hsl(222 47% 18%)"}`,
+                        color: isEditing ? "hsl(142 76% 55%)" : "hsl(215 20% 70%)",
+                        fontSize: "0.775rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {isEditing ? <Check size={14} /> : <Pencil size={14} />}
+                      {isEditing ? "Done" : "Edit Role"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const arr = [...workExperience];
+                        arr.splice(i, 1);
+                        updateField("workExperience", arr);
+                      }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(0 72% 55%)", padding: "6px" }}
+                      title="Delete experience"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-                  <Field label="Job Title" value={(e.title as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], title: v }; updateField("workExperience", arr); }} />
-                  <Field label="Company" value={(e.company as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], company: v }; updateField("workExperience", arr); }} />
-                  <Field label="Start Date" value={(e.startDate as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], startDate: v }; updateField("workExperience", arr); }} placeholder="Jan 2022" />
-                  <Field label="End Date" value={(e.endDate as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], endDate: v }; updateField("workExperience", arr); }} placeholder="Present" />
-                </div>
-                <TextareaField label="Description" value={(e.description as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], description: v }; updateField("workExperience", arr); }} rows={3} />
-                <div style={{ marginTop: "10px" }}>
-                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "6px", color: "hsl(215 20% 65%)" }}>Key Achievements (one per line)</label>
-                  <textarea
-                    value={((e.achievements as string[]) ?? []).join("\n")}
-                    onChange={ev => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], achievements: ev.target.value.split("\n") }; updateField("workExperience", arr); }}
-                    className="input-base"
-                    rows={3}
-                    style={{ fontFamily: "inherit", resize: "vertical" }}
-                    placeholder="Reduced API response time by 40% by introducing Redis caching"
-                  />
-                </div>
+
+                {!isEditing ? (
+                  /* Preview Mode */
+                  <div style={{ paddingTop: "8px", borderTop: "1px solid hsl(222 47% 13%)" }}>
+                    {Boolean(e.description) && (
+                      <p style={{ fontSize: "0.85rem", color: "hsl(215 20% 70%)", lineHeight: 1.5, marginBottom: "10px" }}>
+                        {String(e.description)}
+                      </p>
+                    )}
+                    {achievements.length > 0 && (
+                      <div>
+                        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "hsl(215 20% 50%)" }}>Key Achievements:</span>
+                        <ul style={{ paddingLeft: "18px", marginTop: "4px", fontSize: "0.8rem", color: "hsl(215 20% 65%)", display: "flex", flexDirection: "column", gap: "4px" }}>
+                          {achievements.map((ach, idx) => (
+                            <li key={idx}>{ach}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Edit Mode */
+                  <div style={{ paddingTop: "12px", borderTop: "1px solid hsl(222 47% 13%)" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                      <Field label="Job Title" value={(e.title as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], title: v }; updateField("workExperience", arr); }} />
+                      <Field label="Company" value={(e.company as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], company: v }; updateField("workExperience", arr); }} />
+                      <Field label="Start Date" value={(e.startDate as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], startDate: v }; updateField("workExperience", arr); }} placeholder="e.g. April 2025" />
+                      <Field label="End Date" value={(e.endDate as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], endDate: v }; updateField("workExperience", arr); }} placeholder="e.g. Present" />
+                    </div>
+                    <TextareaField label="Description" value={(e.description as string) ?? ""} onChange={v => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], description: v }; updateField("workExperience", arr); }} rows={3} />
+                    <div style={{ marginTop: "12px", marginBottom: "12px" }}>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "6px", color: "hsl(215 20% 65%)" }}>Key Achievements (one per line)</label>
+                      <textarea
+                        value={achievements.join("\n")}
+                        onChange={ev => { const arr = [...workExperience] as Array<Record<string, unknown>>; arr[i] = { ...arr[i], achievements: ev.target.value.split("\n") }; updateField("workExperience", arr); }}
+                        className="input-base"
+                        rows={4}
+                        style={{ fontFamily: "inherit", resize: "vertical" }}
+                        placeholder="Replaced network interface cards, performed structured rack cabling..."
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        toggleEditExp(i);
+                        save();
+                      }}
+                      className="gradient-btn"
+                      style={{ padding: "8px 16px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <Check size={14} /> Save & Done
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
-          <button onClick={() => updateField("workExperience", [...workExperience, { title: "", company: "", startDate: "", description: "", achievements: [], current: true }])}
-            style={{ width: "100%", padding: "12px", borderRadius: "10px", background: "hsl(222 47% 10%)", border: "1px dashed hsl(222 47% 22%)", color: "hsl(215 20% 55%)", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-            <Plus size={16} /> Add Experience
+
+          <button
+            onClick={() => {
+              const newArr = [...workExperience, { title: "", company: "", startDate: "", endDate: "Present", description: "", achievements: [], current: true }];
+              updateField("workExperience", newArr);
+              setEditingExpIndices(prev => ({ ...prev, [newArr.length - 1]: true }));
+            }}
+            style={{ width: "100%", padding: "12px", borderRadius: "10px", background: "hsl(222 47% 10%)", border: "1px dashed hsl(222 47% 22%)", color: "hsl(215 20% 55%)", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+          >
+            <Plus size={16} /> Add New Experience
           </button>
         </div>
       )}
