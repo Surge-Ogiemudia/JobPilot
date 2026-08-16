@@ -7,14 +7,16 @@ import connectDB from "./lib/db/mongoose";
 import { User } from "./lib/db/models";
 import { authConfig } from "./auth.config";
 
-// MongoDB client for the adapter (not the Mongoose connection)
-const client = new MongoClient(process.env.MONGODB_URI!);
+// MongoClient singleton for NextAuth adapter
+const uri = process.env.MONGODB_URI!;
+const client = new MongoClient(uri, { serverSelectionTimeoutMS: 10000 });
+const clientPromise = client.connect();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
-  adapter: MongoDBAdapter(client),
+  adapter: MongoDBAdapter(clientPromise),
   session: { strategy: "jwt" },
   providers: [
     Credentials({
