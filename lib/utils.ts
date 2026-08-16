@@ -83,6 +83,6 @@ export function parseStartDate(dateStr?: string): number {
 }
 
 export function sortExperienceChronological<T extends { startDate?: string }>(experiences: T[]): T[] {
-  return [...experiences].sort((a, b) => parseStartDate(a.startDate) - parseStartDate(b.startDate));
+  return [...experiences].sort((a, b) => parseStartDate(b.startDate) - parseStartDate(a.startDate));
 }
 
