@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <QueryProvider>
       <div style={{ display: "flex", minHeight: "100vh" }}>
-        <Sidebar user={session.user} />
+        <Sidebar user={session?.user ?? { name: "", email: "" }} />
         <main
           style={{
             flex: 1,

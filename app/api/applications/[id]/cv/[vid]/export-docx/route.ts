@@ -69,7 +69,7 @@ export async function GET(
   const buffer = await Packer.toBuffer(doc);
   const filename = `CV_${app.companyName.replace(/\s+/g, "_")}_${app.roleTitle.replace(/\s+/g, "_")}.docx`;
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "Content-Disposition": `attachment; filename="${filename}"`,

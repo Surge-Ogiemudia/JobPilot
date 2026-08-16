@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Github, BookOpen, CheckCircle2, Clock, Lightbulb, ExternalLink } from "lucide-react";
+import { Plus, GitBranch, BookOpen, CheckCircle2, Clock, Lightbulb, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
@@ -129,7 +129,7 @@ export default function PortfolioPage() {
                     )}
                     {item.githubUrl ? (
                       <a href={item.githubUrl} target="_blank" rel="noopener" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "hsl(215 20% 55%)", textDecoration: "none" }}>
-                        <Github size={13} /> View on GitHub
+                        <GitBranch size={13} /> View on GitHub
                       </a>
                     ) : (
                       <div>
